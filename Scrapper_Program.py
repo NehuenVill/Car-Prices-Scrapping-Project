@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 import time
 
-BaseUrl = 'https://www.cars.com/shopping/results/?'
+BaseUrl = '/www.cars.com/shopping/results/?'
 
 #function that prepares the URL with the parameters given by
 #the client
@@ -28,20 +28,31 @@ def GetData(Url):
 
     while True:
 
-        Req = requests.get(url).text
+        Req = requests.get('http:/'+url).text
         Soup = BeautifulSoup(Req, 'html.parser')
 
         CarList = Soup.find_all('div', class_ = 'vehicle-details')
-        LastNextPageBtn = Soup.find('button', id = 'next_paginate')
 
-        NextPageBtn = Soup.find('a', class_ = '')
+        PageBtns = Soup.find_all('a', class_ = 'sds-button sds-button--secondary sds-pagination__control')
+
+        print(PageBtns)
+
+        NextPageBtn = []
+        
+        for i in PageBtns:
+
+            if i['aria-label'] == 'Next page':
+
+                NextPageBtn = i
+                break
+            else:
+                pass
 
 
         for i in range(len(CarList)):
 
             CarListOutput = {
 
-                'Number': i,
                 'Title': CarList[i].find('h2', class_ = 'title').text,
                 'Price': CarList[i].find('span', class_ = 'primary-price').text,
 
@@ -51,22 +62,22 @@ def GetData(Url):
             print(CarListOutput)
             print(NextPageBtn)
 
-        url = NextPageBtn['href']
+        if NextPageBtn:
 
-        if LastNextPageBtn:
+            url = '/www.cars.com' + NextPageBtn['href']
 
-            break
+            pass
 
         else:
 
-            pass
+            break
 
 #Function to export all the retrieved data into an .xls file.
 
 def SaveData(OP):
 
-    df = pd.DataFrame(OP, columns=['Number', 'Title', 'Price'])
-    df.to_excel('Cars List.xls', index=True, columns=['Number', 'Title', 'Price'])
+    df = pd.DataFrame(OP, columns=['Title', 'Price'])
+    df.to_excel('Cars List.xls', index=True, columns=['Title', 'Price'])
 
 
 #Run the whole process given certain parameters:
